@@ -52,11 +52,9 @@ head(sanfran)
 
 (A) .Rmd Line number(s) for general data wrangling: 
 ```{r}
-poopPerRestroom<-
-  poopAtRestroom%>%
-  group_by(Neighborhood,park)%>%
-  summarize("Poops at neighborhood"=n_distinct(OBJECTID))
-poopPerRestroom
+wrangled<-
+  poop%>%
+  mutate(URL=NULL, geoms=NULL)
 
 
 ```
@@ -73,7 +71,11 @@ poopAtRestroom
 
 (C) .Rmd Line number(s) for a spread or gather operation (or equivalent):
 ```{r}
-
+  availaibility<-
+    poopAtRestroom%>%
+    group_by(access)%>%
+    summarise(poops=n_distinct(OBJECTID))
+  availaibility
 ```
 
 
