@@ -52,30 +52,40 @@ head(sanfran)
 
 (A) .Rmd Line number(s) for general data wrangling: 
 ```{r}
-wrangled<-
+wrangledPoop<-
   poop%>%
-  mutate(URL=NULL, geoms=NULL)
+  mutate(URL=NULL,RequestType=NULL,source=NULL)
 
-
+wrangledBathroom<-
+  sanfran%>%
+  mutate(uid=NULL, water_fountain=NULL, resource_type=NULL,bottle_filler=NULL,jug_filler=NULL, dog_fountain=NULL, notes=NULL, data_source=NULL,data_as_of=NULL,data_loaded_at=NULL)
 ```
 
 
 (B) .Rmd Line number(s) for a join operation: 
 ```{r}
-poopAtRestroom<-
-  left_join(poop, sanfran, by=c('Neighborhood'='analysis_neighborhood'))
+poopByNeighborhood<-
+  left_join(wrangledPoop, wrangledBathroom, by=c('Neighborhood'='analysis_neighborhood'))%>%
+  mutate(latitude.x=NULL,longitude.x=NULL,latitude.y=NULL,longitude.y=NULL, Address=NULL,)
 
-poopAtRestroom
+poopByNeighborhood
 ```
 
 
 (C) .Rmd Line number(s) for a spread or gather operation (or equivalent):
 ```{r}
   availaibility<-
-    poopAtRestroom%>%
+    poopByNeighborhood%>%
     group_by(access)%>%
-    summarise(poops=n_distinct(OBJECTID))
-  availaibility
+    mutate(OBJECTID=NULL,Date=NULL,street=NULL,supervisor=NULL,policedistrict=NULL,CurrentPD=NULL,Neighborhoods=NULL,name=NULL,address=NULL,city=NULL,state=NULL,zip_code=NULL,park=NULL,public_access_hours_open=NULL,public_access_hours_close=NULL,public_access_days=NULL,point=NULL,supervisor_district=NULL,latitude.x=NULL,longitude.x=NULL,latitude.y=NULL,longitude.y=NULL)
+  neighborhood<-
+    poopByNeighborhood%>%
+    group_by(Neighborhood)%>%
+    summarise(count=n())
+    
+accessNeighborhood<-
+  neighborhood%>%
+  left_join(availaibility)
 ```
 
 
