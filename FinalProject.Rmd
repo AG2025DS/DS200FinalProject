@@ -25,6 +25,7 @@ rm(list = ls())
 library(rvest)
 library(lubridate)
 library(tidyverse)
+library(DataComputing)
 #data("SanFranPublicBathrooms.csv")
 
 sanfran=read.csv("SanFranPublicBathrooms.csv", header=TRUE)
@@ -54,7 +55,8 @@ head(sanfran)
 ```{r}
 wrangled<-
   poop%>%
-  mutate(URL=NULL, geoms=NULL)
+  mutate(URL=NULL)
+
 
 
 ```
@@ -63,9 +65,9 @@ wrangled<-
 (B) .Rmd Line number(s) for a join operation: 
 ```{r}
 poopAtRestroom<-
-  left_join(poop, sanfran, by=c('Neighborhood'='analysis_neighborhood'))
+  left_join(wrangled, sanfran, by=c('Neighborhood'='analysis_neighborhood'))
 
-poopAtRestroom
+head(poopAtRestroom)
 ```
 
 
@@ -80,19 +82,75 @@ poopAtRestroom
 
 
 (D) .Rmd Line number(s) for use of regular expressions: 
-
+Note: part F has the regular expression
+```{r}
+Matches <- street_ending_finder(poop, poop$Address, "ST")
+Matches
+```
 
 (E) .Rmd Line number(s) for use of reduction and/or transformation functions: 
 
 
-(F) .Rmd Line number(s) for use of user-defined functions: 
 
+(F) .Rmd Line number(s) for use of user-defined functions: 
+```{r}
+street_ending_finder=function(frame, street.col, street.ending){
+  pattern <- paste(street.ending, "$", sep="")
+  pattern
+  Matches <- frame %>%
+    filter(grepl(pattern = pattern, street.col, ignore.case = TRUE))
+  return(Matches)
+}
+
+
+convert_num_to_date = function(date){
+  hours_passed = (date %% 39630) * 2
+  days = hours_passed %/% 24
+  days
+}
+
+poop2 <- poop %>% mutate(convert_num_to_date(poop$Date))
+```
 
 (G) .Rmd Line number(s) for use of loops and/or control flow: 
+```{r}
 
 
+x <- wrangled %>%
+  select(Neighborhood) %>%
+  group_by(Neighborhood) %>%
+  summarise(poop_count=n())
+
+y <- sanfran %>%
+  select(analysis_neighborhood) %>%
+  group_by(analysis_neighborhood) %>%
+  summarise(restroom_count=n())
+
+joined_table <- x %>% full_join(y, join_by("Neighborhood" == "analysis_neighborhood"))
+
+
+for (case in joined_table){
+  case
+}
+```
 (H) .Rmd Line number(s) for use of machine learning (not "wrangling" but scored here): 
+```{r}
 
+x <- wrangled %>%
+  select(Neighborhood) %>%
+  group_by(Neighborhood) %>%
+  summarise(poop_count=n())
+
+y <- sanfran %>%
+  select(analysis_neighborhood) %>%
+  group_by(analysis_neighborhood) %>%
+  summarise(restroom_count=n())
+
+joined_table <- x %>% full_join(y, join_by("Neighborhood" == "analysis_neighborhood"))
+
+sum_br <- joined_table
+
+```
 
 
 ### Data Visualization (3 of 4 required)
@@ -109,7 +167,19 @@ poopAtRestroom
 (E) .Rmd Line number(s) for use of decision tree or dendogram results:    
 
 
+```{r}
+# devtools::install_github("rstudio/leaflet")
 
+library(leaflet)
+
+Poop_Map <- 
+   leaflet(poop) %>%
+   addTiles() %>%
+   addMarkers(clusterOptions = markerClusterOptions()) %>%
+   setView(-122.44, 37.76849, zoom=12) %>%
+
+Poop_Map
+```
 
 ### Other requirements (Nothing for you to report in this Guidance Document)
 
@@ -122,6 +192,8 @@ poopAtRestroom
 (D) *Overall Quality:* Submitted project shows significant effort to produce a high-quality and thoughtful analysis that showcases STAT 184 skills. (2) The project must be self-contained, such that the analysis can be entirely rerun without errors. (3) Analysis is coherent, well-organized, and free of extraneous content such as data dumps, unrelated graphs, and other content that is not overtly connected to the research question.
 
 (E) *EXTRA CREDIT* (1) Project is submitted as a self-contained GitHub Repo (2) project submission is a functioning github.io webpage generated for the project Repo. Note: a link to the GitHub Repo itself will be awarded partial credit, but does not itself qualify as a "webpage" of the analysis.
+
+
 
 
 
