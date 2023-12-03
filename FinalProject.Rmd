@@ -218,6 +218,18 @@ the number of restrooms in an area has an effect on the number of poops in that 
 
 (A) .Rmd Line number(s) for use of mulitple different geoms:  
 
+```{r}
+b0 = out$par[1]
+b1 = out$par[2]
+
+reg_func = function(b0, b1, x){
+  b0 + b1 * x
+}
+
+ggplot(joined_table) + geom_point(aes(x = restroom_count, y = poop_count)) + 
+  geom_line(aes(x = restroom_count, y = reg_func(b0, b1, restroom_count), color = "red"))
+```
+
 (B) .Rmd Line number(s) for use of multiple aesthetics:  
 
 (C) .Rmd Line number(s) for use of layered graphics:  
