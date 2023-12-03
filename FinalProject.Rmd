@@ -3,8 +3,8 @@ title: 'Final Project: Guidance Document'
 author: "Allen,Julian,Vishnu,Shweta"
 date: "Due December 3, 2023"
 output:
-  pdf_document: default
   html_notebook: default
+  pdf_document: default
 ---
 
 # Purpose
@@ -90,7 +90,25 @@ Matches
 
 (E) .Rmd Line number(s) for use of reduction and/or transformation functions: 
 
+```{r}
 
+x <- wrangled %>%
+  select(Neighborhood) %>%
+  group_by(Neighborhood) %>%
+  summarise(poop_count=n())
+
+y <- sanfran %>%
+  select(analysis_neighborhood) %>%
+  group_by(analysis_neighborhood) %>%
+  summarise(restroom_count=n())
+
+joined_table <- x %>% 
+  full_join(y, join_by("Neighborhood" == "analysis_neighborhood"))
+
+joined_table <- joined_table[!is.na(joined_table$Neighborhood),]
+
+
+```
 
 (F) .Rmd Line number(s) for use of user-defined functions: 
 ```{r}
@@ -116,42 +134,79 @@ poop2 <- poop %>% mutate(convert_num_to_date(poop$Date))
 ```{r}
 
 
-x <- wrangled %>%
-  select(Neighborhood) %>%
-  group_by(Neighborhood) %>%
-  summarise(poop_count=n())
-
-y <- sanfran %>%
-  select(analysis_neighborhood) %>%
-  group_by(analysis_neighborhood) %>%
-  summarise(restroom_count=n())
-
-joined_table <- x %>% full_join(y, join_by("Neighborhood" == "analysis_neighborhood"))
 
 
-for (case in joined_table){
-  case
+
+for (i in 1:length(joined_table$Neighborhood)){
+  case <- joined_table[i,]
+  for (j in 1:length(case)){
+    variable <- joined_table[i,j]
+    if (is.na(variable) ){
+      joined_table[i,j] <- 0
+    }
+  }
 }
+
+
 ```
 (H) .Rmd Line number(s) for use of machine learning (not "wrangling" but scored here): 
+
+We want to explore if a restroom count in a neighborhood has an effect on poop count
+in a neighborhood. We will use linear regression to explore this. 
+
+The setup:
+
+$poop\_count_i \sim N(b_0 + b_1 \times restroom\_count_i, \sigma^2)$
+
+
+The following Hypothesis are used:
+
+\begin{align*}
+H_0 &: b_1 = 0 \\
+H_a &: b_1 \neq 0
+\end{align*}
+
+
+Approach taught in Stat 415, write a negative log liklihood function.
+
 ```{r}
 
-x <- wrangled %>%
-  select(Neighborhood) %>%
-  group_by(Neighborhood) %>%
-  summarise(poop_count=n())
+nll.regression = function(theta, poop_count, restroom_count){
+  b0 = theta[1]
+  b1 = theta[2]
+  sigma_sq = theta[3]
+  mean = b0 + b1 * restroom_count
+  -sum(dnorm(poop_count, mean=mean, sd = sigma_sq, log = TRUE))
+}
 
-y <- sanfran %>%
-  select(analysis_neighborhood) %>%
-  group_by(analysis_neighborhood) %>%
-  summarise(restroom_count=n())
-
-joined_table <- x %>% full_join(y, join_by("Neighborhood" == "analysis_neighborhood"))
-
-sum_br <- joined_table
 
 ```
 
+
+Here we use the optim function which will estimate the MLE for $b_0, b_1$ and $\sigma^2$
+```{r}
+out = optim(c(0, 0, 1), nll.regression, poop_count=joined_table$poop_count, restroom_count=joined_table$restroom_count, hessian=TRUE)
+
+
+b1= out$par[2]
+I = out$hessian
+
+se = sqrt(diag(solve(I)))
+
+```
+
+
+```{r}
+Z = (b1 - 0)/se[2]
+
+p_val = 2 * dnorm(-abs(Z))
+
+p_val
+
+
+```
+Since our p_value is less than 0.05, we can reject our null hypothesis and conclude that
+the number of restrooms in an area has an effect on the number of poops in that area
 
 ### Data Visualization (3 of 4 required)
 
