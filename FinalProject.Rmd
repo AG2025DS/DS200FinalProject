@@ -5,6 +5,8 @@ date: "Due December 3, 2023"
 output:
   html_notebook: default
   pdf_document: default
+  html_document:
+    df_print: paged
 ---
 
 # Purpose
@@ -183,7 +185,7 @@ nll.regression = function(theta, poop_count, restroom_count){
 ```
 
 
-Here we use the optim function which will estimate the MLE for $b_0, b_1$ and $\sigma^2$
+Here we use the optim function which will estimate the MLE for $ b_0, b_1$ and $\sigma^2$
 ```{r}
 out = optim(c(0, 0, 1), nll.regression, poop_count=joined_table$poop_count, restroom_count=joined_table$restroom_count, hessian=TRUE)
 
@@ -195,6 +197,7 @@ se = sqrt(diag(solve(I)))
 
 ```
 
+Calculate the Wald-Test Statistic and check $P(|Z^*| < 0.05)$
 
 ```{r}
 Z = (b1 - 0)/se[2]
@@ -222,16 +225,23 @@ the number of restrooms in an area has an effect on the number of poops in that 
 (E) .Rmd Line number(s) for use of decision tree or dendogram results:    
 
 
+
+Part C
 ```{r}
 # devtools::install_github("rstudio/leaflet")
 
 library(leaflet)
 
 Poop_Map <- 
-   leaflet(poop) %>%
-   addTiles() %>%
-   addMarkers(clusterOptions = markerClusterOptions()) %>%
-   setView(-122.44, 37.76849, zoom=12) %>%
+   leaflet() %>%
+  addTiles() %>%
+   addMarkers(clusterOptions = markerClusterOptions(), data=poop) %>%
+   addCircleMarkers(radius=2, color="red", data=sanfran) %>%
+   setView(-122.44, 37.76849, zoom=12)%>% 
+   addLegend(position = "bottomleft",
+                         colors = c("red", "orange"),
+                         labels = c("Public_Restrooms", "Poop Clusters are numbered"),
+                         title = "Marker Categories")
 
 Poop_Map
 ```
