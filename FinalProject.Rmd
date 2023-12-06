@@ -128,7 +128,7 @@ Matches <- street_ending_finder(poop, poop$Address, "ST")
 Matches
 ```
 
-(E) .Rmd Line number(s) for use of reduction and/or transformation functions:
+(E) .Rmd Line number(s) for use of reduction and/or transformation functions:135-149
 
 ```{r}
 
@@ -150,7 +150,7 @@ joined_table
 
 ```
 
-(F) .Rmd Line number(s) for use of user-defined functions:
+(F) .Rmd Line number(s) for use of user-defined functions: 158-164
 
 ```{r}
 
@@ -317,20 +317,6 @@ ggplot(joined_table, aes(x = Neighborhood)) +
 
 ```{r}
 #devtools::install_github("rstudio/leaflet")
-
-library(leaflet)
-
-
-Poop_Map <- 
-   leaflet() %>%
-  addTiles() %>%
-   addMarkers(clusterOptions = markerClusterOptions(), data=poop) %>%
-   addCircleMarkers(radius=2, color="red", data=sanfran) %>%
-   setView(-122.44, 37.76849, zoom=12)%>% 
-   addLegend(position = "bottomleft",
-                         colors = c("red", "orange"),
-                         labels = c("Public_Restrooms", "Poop Clusters are numbered"),
-                         title = "Marker Categories")
 library(leaflet)
 library(htmltools)
 knitr::opts_chunk$set(echo = TRUE)
