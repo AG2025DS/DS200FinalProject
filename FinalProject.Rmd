@@ -9,17 +9,9 @@ output:
   pdf_document: default
 ---
 
-# Purpose
+Exploratory question:
+  Does public restroom in a given neighborhood affect fecal matter appearance rates in said neighborhood?
 
-*This document is required to indicate where various requirements can be found within your Final Project Report Rmd. You must* **indicate line numbers as they appear in your final Rmd document** *accompanying each of the following required tasks. Points will be deducted if line numbers are missing or differ signficantly from the submitted Final Rmd document.*
-
-# Final Project Requirements
-
-### Data Access
-
-*Description: (1) Analysis includes at least two different data sources. (2) Primary data source may NOT be loaded from an R package--though supporting data may. (3) Access to all data sources is contained within the analysis. (4) Imported data is inspected at beginning of analysis using one or more R functions: e.g., str, glimpse, head, tail, names, nrow, etc*
-
-(A) .Rmd Line numbers where at least two different data sources are imported:
 
 ```{r}
 rm(list = ls())
@@ -37,11 +29,7 @@ library(remotes)
 library("esri2sf")
 url <- "https://services.arcgis.com/QPnoxtBFXm6yYtyc/ArcGIS/rest/services/SanFranciscoPoopMap_WFL1/FeatureServer/2"
 poop <- esri2sf(url, objectIds = paste(collapse = ","))
-```
 
-(B) .Rmd Line numbers for inspecting data intake:\
-
-```{r}
 str(poop)
 head(sanfran)
 ```
@@ -84,6 +72,11 @@ head(poopAtRestroom)
     poopAtRestroom%>%
     group_by(access)%>%
     summarise(poops=n_distinct(OBJECTID))
+  availaibility<-
+    poopAtRestroom%>%
+    group_by(access)%>%
+    summarise(poops=n_distinct(OBJECTID))
+View(availaibility)
   availaibility
 ```
 
