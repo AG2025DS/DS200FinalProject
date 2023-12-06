@@ -3,17 +3,10 @@ title: 'Final Project: Guidance Document'
 author: "Allen,Julian,Vishnu,Shweta"
 date: "Due December 3, 2023"
 output:
-<<<<<<< HEAD
+  html_notebook: default
   html_document:
     df_print: paged
-  html_notebook: default
   pdf_document: default
-=======
-  html_notebook: default
-  pdf_document: default
-  html_document:
-    df_print: paged
->>>>>>> 1631852d21a9cf2a00ca7ef241831e2ef5342ab6
 ---
 
 # Purpose
@@ -26,7 +19,7 @@ output:
 
 *Description: (1) Analysis includes at least two different data sources. (2) Primary data source may NOT be loaded from an R package--though supporting data may. (3) Access to all data sources is contained within the analysis. (4) Imported data is inspected at beginning of analysis using one or more R functions: e.g., str, glimpse, head, tail, names, nrow, etc*
 
-(A) .Rmd Line numbers where at least two different data sources are imported:\
+(A) .Rmd Line numbers where at least two different data sources are imported:
 
 ```{r}
 rm(list = ls())
@@ -40,7 +33,7 @@ sanfran=read.csv("SanFranPublicBathrooms.csv", header=TRUE)
 head(sanfran)
 
 library(remotes)
-install_github("yonghah/esri2sf")
+#install_github("yonghah/esri2sf")
 library("esri2sf")
 url <- "https://services.arcgis.com/QPnoxtBFXm6yYtyc/ArcGIS/rest/services/SanFranciscoPoopMap_WFL1/FeatureServer/2"
 poop <- esri2sf(url, objectIds = paste(collapse = ","))
@@ -84,8 +77,7 @@ head(poopAtRestroom)
 
 (D) .Rmd Line number(s) for use of regular expressions: Note: part F has the regular expression
 
-<<<<<<< HEAD
-=======
+
 (C) .Rmd Line number(s) for a spread or gather operation (or equivalent):
 ```{r}
   availaibility<-
@@ -98,10 +90,6 @@ head(poopAtRestroom)
 
 (D) .Rmd Line number(s) for use of regular expressions: 
 Note: part F has the regular expression
-```{r}
-Matches <- street_ending_finder(poop, poop$Address, "ST")
-Matches
-```
 
 (E) .Rmd Line number(s) for use of reduction and/or transformation functions: 
 
@@ -126,7 +114,7 @@ joined_table <- joined_table[!is.na(joined_table$Neighborhood),]
 ```
 
 (F) .Rmd Line number(s) for use of user-defined functions: 
->>>>>>> 1631852d21a9cf2a00ca7ef241831e2ef5342ab6
+
 ```{r}
 street_ending_finder=function(frame, street.col, street.ending){
   pattern <- paste(street.ending, "$", sep="")
@@ -205,43 +193,29 @@ for (i in 1:length(joined_table$Neighborhood)){
 
 
 ```
-<<<<<<< HEAD
 
-(H) .Rmd Line number(s) for use of machine learning (not "wrangling" but scored here):
 
-We want to explore if a restroom count in a neighborhood has an effect on poop count in a neighborhood. We will use linear regression to explore this.
-=======
+
 (H) .Rmd Line number(s) for use of machine learning (not "wrangling" but scored here): 
 
 We want to explore if a restroom count in a neighborhood has an effect on poop count
 in a neighborhood. We will use linear regression to explore this. 
->>>>>>> 1631852d21a9cf2a00ca7ef241831e2ef5342ab6
 
 The setup:
 
 $poop\_count_i \sim N(b_0 + b_1 \times restroom\_count_i, \sigma^2)$
 
-<<<<<<< HEAD
 The following Hypothesis are used:
 
-```{=tex}
-=======
 
-The following Hypothesis are used:
-
->>>>>>> 1631852d21a9cf2a00ca7ef241831e2ef5342ab6
 \begin{align*}
 H_0 &: b_1 = 0 \\
 H_a &: b_1 \neq 0
 \end{align*}
-<<<<<<< HEAD
-```
-Approach taught in Stat 415, write a negative log likelihood function.
-=======
+
 
 
 Approach taught in Stat 415, write a negative log liklihood function.
->>>>>>> 1631852d21a9cf2a00ca7ef241831e2ef5342ab6
 
 ```{r}
 
@@ -281,31 +255,6 @@ p_val
 
 ```
 
-Since our p_value is less than 0.05, we can reject our null hypothesis and conclude that the number of restrooms in an area has an effect on the number of poops in that area
-
-Here we use the optim function which will estimate the MLE for $ b_0, b_1$ and $\sigma^2$
-```{r}
-out = optim(c(0, 0, 1), nll.regression, poop_count=joined_table$poop_count, restroom_count=joined_table$restroom_count, hessian=TRUE)
-
-
-b1= out$par[2]
-I = out$hessian
-
-se = sqrt(diag(solve(I)))
-
-```
-
-Calculate the Wald-Test Statistic and check $P(|Z^*| < 0.05)$
-
-```{r}
-Z = (b1 - 0)/se[2]
-
-p_val = 2 * dnorm(-abs(Z))
-
-p_val
-
-
-```
 Since our p_value is less than 0.05, we can reject our null hypothesis and conclude that
 the number of restrooms in an area has an effect on the number of poops in that area
 
@@ -313,37 +262,14 @@ the number of restrooms in an area has an effect on the number of poops in that 
 
 *Description: Students need not use every function and method introduced in STAT 184, but clear demonstration of proficiency should include a range of useful of data visualizations that are (1) relevant to stated research question for the analysis, (2) include at least one effective display of many--at least 3--variables, and (3) include 3 of the following 5 visualization techniques learned in STAT 184: (+) use of multiple geoms such as points, density, lines, segments, boxplots, bar charts, histograms, etc (+) use of multiple aesthetics--not necessarily all in the same graph--such as color, size, shape, x/y position, facets, etc (+) layered graphics such as points and accompanying smoother, points and accompanying boxplots, overlaid density distributions, etc (+) decision tree and/or dendogram displaying machine learning model results*
 
-(A) .Rmd Line number(s) for use of mulitple different geoms:\
-    241,242,265,266
+(A) .Rmd Line number(s) for use of mulitple different geoms:
+    283,284,306,307
 
-(B) .Rmd Line number(s) for use of multiple aesthetics:\
-    242,265,266
+(B) .Rmd Line number(s) for use of multiple aesthetics:
+    283,306,307
 
-<<<<<<< HEAD
-(C) .Rmd Line number(s) for use of layered graphics:\
-    241+242,265+266
-=======
-```{r}
-b0 = out$par[1]
-b1 = out$par[2]
-
-reg_func = function(b0, b1, x){
-  b0 + b1 * x
-}
-
-ggplot(joined_table) + geom_point(aes(x = restroom_count, y = poop_count)) + 
-  geom_line(aes(x = restroom_count, y = reg_func(b0, b1, restroom_count), color = "red"))
-```
-
-(B) .Rmd Line number(s) for use of multiple aesthetics:  
-
-(C) .Rmd Line number(s) for use of layered graphics:  
-
-(E) .Rmd Line number(s) for use of decision tree or dendogram results:    
->>>>>>> 1631852d21a9cf2a00ca7ef241831e2ef5342ab6
-
-(D) .Rmd Line number(s) for use of decision tree or dendogram results:
-
+(C) .Rmd Line number(s) for use of layered graphics:
+    283+284,306+307
 
 Part C
 ```{r}
@@ -363,7 +289,7 @@ wrangledA <- data.frame(Neighborhood = sample(c("A", "B", "C", "D"), 100, replac
 
 sanfranA <- data.frame(analysis_neighborhood = sample(c("A", "B", "C", "D"), 120, replace = TRUE))
 
-x <- wrangled %>%
+x <- wrangledA %>%
   select(Neighborhood) %>%
   group_by(Neighborhood) %>%
   summarise(poop_count = n())
@@ -405,8 +331,26 @@ Poop_Map <-
                          colors = c("red", "orange"),
                          labels = c("Public_Restrooms", "Poop Clusters are numbered"),
                          title = "Marker Categories")
+library(leaflet)
+library(htmltools)
+knitr::opts_chunk$set(echo = TRUE)
 
-Poop_Map
+html <- list()
+  html <- c(html, 
+            list(h3(paste0("Map")),
+                leaflet() %>%
+  addTiles() %>%
+   addMarkers(clusterOptions = markerClusterOptions(), data=poop) %>%
+   addCircleMarkers(radius=2, color="red", data=sanfran) %>%
+   setView(-122.44, 37.76849, zoom=12)%>% 
+   addLegend(position = "bottomleft",
+                         colors = c("red", "orange"),
+                         labels = c("Public_Restrooms", "Poop Clusters are numbered"),
+                         title = "Marker Categories")
+                 )
+            )
+
+tagList(html)
 ```
 
 ### Other requirements (Nothing for you to report in this Guidance Document)
@@ -420,3 +364,5 @@ Poop_Map
 (D) *Overall Quality:* Submitted project shows significant effort to produce a high-quality and thoughtful analysis that showcases STAT 184 skills. (2) The project must be self-contained, such that the analysis can be entirely rerun without errors. (3) Analysis is coherent, well-organized, and free of extraneous content such as data dumps, unrelated graphs, and other content that is not overtly connected to the research question.
 
 (E) *EXTRA CREDIT* (1) Project is submitted as a self-contained GitHub Repo (2) project submission is a functioning github.io webpage generated for the project Repo. Note: a link to the GitHub Repo itself will be awarded partial credit, but does not itself qualify as a "webpage" of the analysis.
+
+https://github.com/AG2025DS/Stat184FinalProject
