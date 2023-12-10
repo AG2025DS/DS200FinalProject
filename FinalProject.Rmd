@@ -9,9 +9,11 @@ output:
   pdf_document: default
 ---
 
-Exploratory question:
+#Exploratory question:
   Does public restroom in a given neighborhood affect fecal matter appearance rates in said neighborhood?
 
+#Datasets
+We took two data sets. One from ARCGIS San Francisco Poop map A scrapped using esri2sf on the arcgis service layer and bathroom from a wrangled csv using Excel from the San Francisco Government website.
 
 ```{r}
 rm(list = ls())
@@ -20,25 +22,33 @@ library(lubridate)
 library(tidyverse)
 library(DataComputing)
 #data("SanFranPublicBathrooms.csv")
-
+#We obtained the following from https://data.sfgov.org/City-Infrastructure/Map-of-Public-Water-Fountains/ne3b-nisa
 sanfran=read.csv("SanFranPublicBathrooms.csv", header=TRUE)
 head(sanfran)
-
+#We found the following github for scraping arcgis layers.
 library(remotes)
 #install_github("yonghah/esri2sf")
 library("esri2sf")
+
+#We found this layer from the pennstate arcgis directory. https://pennstate.maps.arcgis.com/home/item.html?id=f3c1738ad2024439b278baad2ae67a54#data
 url <- "https://services.arcgis.com/QPnoxtBFXm6yYtyc/ArcGIS/rest/services/SanFranciscoPoopMap_WFL1/FeatureServer/2"
 poop <- esri2sf(url, objectIds = paste(collapse = ","))
 
-str(poop)
 head(sanfran)
 ```
 
-### Data Wrangling (5 out of 8 required)
+##San Francisco table analysis 
+We have important location information for geospatial analysis, but also redundant information such as date loaded, water fountains, and other public water descriptions unused in analysis. We will wrangle it later.
 
-*Description: Students need not use every function and method introduced in STAT 184, but clear demonstration of proficiency should include proper use of 5 out of the following 8 topics from class: (+) various data verbs for general data wrangling like filter, mutate, summarise, arrange, group_by, etc. (+) joins for multiple data tables. (+) spread & gather to stack/unstack variables (+) regular expressions (+) reduction and/or transformation functions like mean, sum, max, min, n(), rank, pmin, etc. (+) user-defined functions (+) loops and control flow (+) machine learning*
+--------------------------------------------------------------------------
 
-(A) .Rmd Line number(s) for general data wrangling:
+```{r}
+head(poop)
+```
+##Poop table analysis
+We have a lot of redundant overlapping information such as neighborhood(neighborhood/Neighborhoods)+district(currentPD/PoliceDistrict). We will later define a function that will convert the 5 digit dates of the table into a day between 1-365 for the time period of July 2019 to June 2020.
+--------------------------------------------------------------------------
+
 
 ```{r}
 library(sf)
@@ -53,77 +63,14 @@ sanfranBR<-
   mutate(uid=NULL, water_fountain=NULL, resource_type=NULL,bottle_filler=NULL,jug_filler=NULL, dog_fountain=NULL, notes=NULL, data_source=NULL,data_as_of=NULL,data_loaded_at=NULL)%>%
   st_drop_geometry(df)
 ```
-
-(B) .Rmd Line number(s) for a join operation:
+#Wrangling
+We have two sets of wrangled datasets and later we defined some other subsets of data that still holds geoms. But the basis of our investigation focuses on geographical information and thus we remove information that involves unimportant to our special research question such as water fountains. We remove the geoms from the wrangled dataset to make joins easier since the geoms typically cause the datasets to be perceived as spatial data. However, we will maintain a subset to make the leaflet and compare location information.
+--------------------------------------------------------------------------
 
 ```{r}
 poopAtRestroom<-
   left_join(wrangled, sanfran, by=c('Neighborhood'='analysis_neighborhood'))
 
-head(poopAtRestroom)
-```
-
-(D) .Rmd Line number(s) for use of regular expressions: Note: part F has the regular expression
-
-
-(C) .Rmd Line number(s) for a spread or gather operation (or equivalent):
-```{r}
-  availaibility<-
-    poopAtRestroom%>%
-    group_by(access)%>%
-    summarise(poops=n_distinct(OBJECTID))
-  availaibility<-
-    poopAtRestroom%>%
-    group_by(access)%>%
-    summarise(poops=n_distinct(OBJECTID))
-View(availaibility)
-  availaibility
-```
-
-
-(D) .Rmd Line number(s) for use of regular expressions: 
-Note: part F has the regular expression
-
-(E) .Rmd Line number(s) for use of reduction and/or transformation functions: 
-
-```{r}
-
-x <- wrangled %>%
-  select(Neighborhood) %>%
-  group_by(Neighborhood) %>%
-  summarise(poop_count=n())
-
-y <- sanfran %>%
-  select(analysis_neighborhood) %>%
-  group_by(analysis_neighborhood) %>%
-  summarise(restroom_count=n())
-
-joined_table <- x %>% 
-  full_join(y, join_by("Neighborhood" == "analysis_neighborhood"))
-
-joined_table <- joined_table[!is.na(joined_table$Neighborhood),]
-
-
-```
-
-(F) .Rmd Line number(s) for use of user-defined functions: 
-
-```{r}
-street_ending_finder=function(frame, street.col, street.ending){
-  pattern <- paste(street.ending, "$", sep="")
-  pattern
-  Matches <- frame %>%
-    filter(grepl(pattern = pattern, street.col, ignore.case = TRUE))
-  return(Matches)
-}
-
-Matches <- street_ending_finder(poop, poop$Address, "ST")
-Matches
-```
-
-(E) .Rmd Line number(s) for use of reduction and/or transformation functions:135-149
-
-```{r}
 
 x <- wrangled %>%
   select(Neighborhood) %>%
@@ -140,13 +87,12 @@ joined_table <- x %>%
 
 joined_table <- joined_table[!is.na(joined_table$Neighborhood),]
 joined_table
-
 ```
+#Join operation
+Before the information has been organized, we scale out the entirely of both datasets in one join in order to have a large scale analysis on the possible correlations between the two table. In doing so, we realized bathrooms tend to also differ by whether they are publically or selectively available for use.
 
-(F) .Rmd Line number(s) for use of user-defined functions: 158-164
-
+--------------------------------------------------------------------------
 ```{r}
-
 
 convert_num_to_date = function(date){
   hours_passed = (date %% 39630) * 2
@@ -155,23 +101,29 @@ convert_num_to_date = function(date){
 }
 
 poop2 <- wrangled %>% mutate(dayReported=convert_num_to_date(wrangled$Date))
+
+supervisor<-
+    poop2%>%
+    group_by(dayReported,supervisor)%>%
+    summarise(count=n())%>%
+    pivot_wider(names_from=supervisor, values_from = count, names_glue = "{.value}{supervisor}")
+supervisor
 ```
+#Pivot wider
+We inspect the trends of supervisors for each day of the year in terms of finding excrement. This will appear in a graph later. 
 
-(C) .Rmd Line number(s) for a spread or gather operation (or equivalent):
-
+--------------------------------------------------------------------------
 ```{r}
-poop2%>%
-  group_by(dayReported,supervisor)%>%
-  summarise(count=n())%>%
-  pivot_wider(names_from=supervisor,values_from = count)
-```
+street_ending_finder=function(frame, street.col, street.ending){
+  pattern <- paste(street.ending, "$", sep="")
+  pattern
+  Matches <- frame %>%
+    filter(grepl(pattern = pattern, street.col, ignore.case = TRUE))
+  return(Matches)
+}
 
-(G) .Rmd Line number(s) for use of loops and/or control flow:
-
-```{r}
-
-
-
+Matches <- street_ending_finder(poop, poop$Address, "ST")
+Matches
 
 
 for (i in 1:length(joined_table$Neighborhood)){
@@ -186,10 +138,11 @@ for (i in 1:length(joined_table$Neighborhood)){
 
 
 ```
+#Finishing touches
+  We are clearing up null information within the join table and using regular expression to clear up confusions between the address and street variables in the poop table and the location in San Francisco bathroom tables.
 
-
-
-(H) .Rmd Line number(s) for use of machine learning (not "wrangling" but scored here): 
+--------------------------------------------------------------------------
+#Linear Regression math
 
 We want to explore if a restroom count in a neighborhood has an effect on poop count
 in a neighborhood. We will use linear regression to explore this. 
@@ -251,20 +204,27 @@ p_val
 Since our p_value is less than 0.05, we can reject our null hypothesis and conclude that
 the number of restrooms in an area has an effect on the number of poops in that area
 
-### Data Visualization (3 of 4 required)
+--------------------------------------------------------------------------
+#VISUALIZATIONS
 
-*Description: Students need not use every function and method introduced in STAT 184, but clear demonstration of proficiency should include a range of useful of data visualizations that are (1) relevant to stated research question for the analysis, (2) include at least one effective display of many--at least 3--variables, and (3) include 3 of the following 5 visualization techniques learned in STAT 184: (+) use of multiple geoms such as points, density, lines, segments, boxplots, bar charts, histograms, etc (+) use of multiple aesthetics--not necessarily all in the same graph--such as color, size, shape, x/y position, facets, etc (+) layered graphics such as points and accompanying smoother, points and accompanying boxplots, overlaid density distributions, etc (+) decision tree and/or dendogram displaying machine learning model results*
+```{r}
+ggplot(supervisor)+
+  geom_line(aes(x=dayReported,y=count1,color="District1"))+
+  geom_line(aes(x=dayReported,y=count2,color="District2"))+
+  geom_line(aes(x=dayReported,y=count3,color="District3"))+
+  geom_line(aes(x=dayReported,y=count4,color="District4"))+
+  geom_line(aes(x=dayReported,y=count5,color="District5"))+
+  geom_line(aes(x=dayReported,y=count6,color="District6"))+
+  geom_line(aes(x=dayReported,y=count7,color="District7"))+
+  geom_line(aes(x=dayReported,y=count8,color="District8"))+
+  geom_line(aes(x=dayReported,y=count9,color="District9"))+
+  geom_line(aes(x=dayReported,y=count10,color="District10"))
+```
+##Line graph
+We have the pivot table here as a multi layered graphic about the relation between different districts and their experience with reports throughout the year.
+In our initial theory about the trends, we envision areas around tenderloin to have the most. This means we should expect district 6 and 8 to be particularly relevant. However, under deeper analysis, we see that district 9 is higher, but almost no other district reaches the same density. We also found a big dip of information between days 140-200 which puts it squarely in spring 2020 when isolation really started taking place. 
 
-(A) .Rmd Line number(s) for use of mulitple different geoms:
-    283,284,306,307
-
-(B) .Rmd Line number(s) for use of multiple aesthetics:
-    283,306,307
-
-(C) .Rmd Line number(s) for use of layered graphics:
-    283+284,306+307
-
-Part C
+--------------------------------------------------------------------------
 ```{r}
 b0 = out$par[1]
 b1 = out$par[2]
@@ -276,11 +236,14 @@ reg_func = function(b0, b1, x){
 ggplot(joined_table) + geom_point(aes(x = restroom_count, y = poop_count)) + 
   geom_line(aes(x = restroom_count, y = reg_func(b0, b1, restroom_count), color = "red"))
 ```
+##Linear regression comparing restroom count and poop count.
+According to our effect, we find the restrooms in area tends to means more counts. In general, we should expect higher foot traffic in areas with higher bathrooms. However, the case seems to say there are cases where a neighborhood have few public bathrooms and they tend to have regular cases. However, it goes expontentially higher for places with a decent amount, but drops back down for when the instrastructure has a lot of bathrooms. Bathrooms have an effect that isn't strictly linear, but rather seems to be an indictation of the nature of San Francisco infrastructure.
 
+--------------------------------------------------------------------------
 ```{r}
-wrangledA <- data.frame(Neighborhood = sample(c("A", "B", "C", "D"), 100, replace = TRUE))
+wrangledA <- data.frame(Neighborhood = sample(c("A", "B", "C", "D"), 1000, replace = TRUE))
 
-sanfranA <- data.frame(analysis_neighborhood = sample(c("A", "B", "C", "D"), 120, replace = TRUE))
+sanfranA <- data.frame(analysis_neighborhood = sample(c("A", "B", "C", "D"), 1000, replace = TRUE))
 
 x <- wrangledA %>%
   select(Neighborhood) %>%
@@ -307,7 +270,10 @@ ggplot(joined_table, aes(x = Neighborhood)) +
   theme(legend.position = "top", legend.title = element_blank()) +
   scale_y_continuous(expand = expansion(mult = c(0.1, 0.2)))
 ```
+#Sampling and Bucketing
+In order to view neighborhoods, we take random samples of how in general, excrement geographically happen near bathrooms at least relatively. However, it does appear that you will find neighborhoods where this is not the case. This seems to build towards the expectation that we can view this is part of city planning and the council's correction towards these data points.
 
+--------------------------------------------------------------------------
 ```{r}
 #devtools::install_github("rstudio/leaflet")
 library(leaflet)
@@ -331,17 +297,10 @@ html <- list()
 
 tagList(html)
 ```
+#Leaflet
+In order to represent the data, we recreated a similar graph to the arcgis map, but as clusters and included bathrooms because their raw data is to produce purely points that can be used in rasanter functions whereas we want to use poops rather as a general point towards their relations to bathrooms.
+Calling back to our previous conclusions, we find that areas with very few bathrooms tend to have regular occurrences along the intersection of bathrooms. Furthermore we can find a large set of excrement adjacent to bathrooms in high density areas.
 
-### Other requirements (Nothing for you to report in this Guidance Document)
 
-(A) *All data visualizations* must be relevant to the stated research question, and the report must include at least one effective display of many--at least 3--variables
-
-(B) *Code quality:* Code formatting is consistent with Style Guide Appendix of DataComputing eBook. Specifically, all code chunks demonstrate proficiency with (1) meaningful object names (2) proper use of white space especially with respect to infix operators, chain operators, commas, brackets/parens, etc (3) use of `<-` assignment operator throughout (4) use of meaningful comments.
-
-(C) *Narrative quality:* The narrative text (1) clearly states one research question that motivates the overall analysis, (2) explains reasoning for each significant step in the analysis and it's relationship to the research question, (3) explains significant findings and conclusions as they relate to the research question, and (4) is completely free of errors in spelling and grammar
-
-(D) *Overall Quality:* Submitted project shows significant effort to produce a high-quality and thoughtful analysis that showcases STAT 184 skills. (2) The project must be self-contained, such that the analysis can be entirely rerun without errors. (3) Analysis is coherent, well-organized, and free of extraneous content such as data dumps, unrelated graphs, and other content that is not overtly connected to the research question.
-
-(E) *EXTRA CREDIT* (1) Project is submitted as a self-contained GitHub Repo (2) project submission is a functioning github.io webpage generated for the project Repo. Note: a link to the GitHub Repo itself will be awarded partial credit, but does not itself qualify as a "webpage" of the analysis.
-
+#Link to GITHUB Repo
 https://github.com/AG2025DS/Stat184FinalProject
